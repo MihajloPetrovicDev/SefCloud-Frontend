@@ -27,7 +27,7 @@ export default {
         },
         async createStorageContainer() {
             var response = await axios.post("https://localhost:7169/api/storage/create-container", {
-                authToken: localStorage.getItem('auth-token'),
+                authorization: `Bearer ${localStorage.getItem('auth-token')}`,
                 storageContainerName: this.containerName,
             });
 
