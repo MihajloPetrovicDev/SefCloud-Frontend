@@ -36,10 +36,19 @@ export default {
     methods: {
         async downloadFile() {
             try {
-                const response = await axios.post(`https://localhost:7169/api/storage/download-file`, {
+                const response = await axios.post(`https://localhost:7169/api/storage/download-file`, 
+                {
                     Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
                     StorageContainerItemId: this.id,
+                }, 
+                {
+                    responseType: 'blob',
                 });
+
+                const contentDisposition = response.headers['content-disposition'];
+                const fileName = contentDisposition
+                    ? contentDisposition.split('filename=')[1]?.split(';')[0].replace(/"/g, '')
+                    : 'default-file-name';
 
                 // Create a new Blob from the response data
                 const fileBlob = new Blob([response.data], { type: 'application/octet-stream' });
@@ -50,11 +59,12 @@ export default {
                 // Create an anchor element to trigger the download
                 const downloadLink = document.createElement('a');
                 downloadLink.href = fileURL;
-                downloadLink.download = response.data.fileName;
+                downloadLink.download = fileName;
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
 
                 document.body.removeChild(downloadLink);
+                window.URL.revokeObjectURL(fileURL);
             } 
             catch (error) {
                 console.error('Error downloading file:', error);
