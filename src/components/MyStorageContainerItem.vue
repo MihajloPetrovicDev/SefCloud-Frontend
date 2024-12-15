@@ -1,16 +1,18 @@
 <template>
-<div class="container-item-container">
+<div v-if="isVisible" class="container-item-container">
     <p class="file-name">{{ fileName }}</p>
     <p class="file-size">{{ fileSize }} B</p>
     <p class="file-create-at">{{ formattedCreatedAt }}</p>
-    <button class="btn btn-primary download-btn"><span class="material-symbols-outlined delete-symbol">download</span></button>
-    <button class="btn btn-danger delete-btn"><span class="material-symbols-outlined delete-symbol">delete</span></button>
+    <button class="btn btn-primary download-btn" @click="downloadFile"><span class="material-symbols-outlined delete-symbol">download</span></button>
+    <button class="btn btn-danger delete-btn" @click="deleteFile"><span class="material-symbols-outlined delete-symbol">delete</span></button>
 </div>
 </template>
 
 
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'MyStorageContainerItem',
     props: {
@@ -31,12 +33,60 @@ export default {
             required: true,
         }
     },
+    methods: {
+        async downloadFile() {
+            try {
+                const response = await axios.post(`https://localhost:7169/api/storage/download-file`, {
+                    Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
+                    StorageContainerItemId: this.id,
+                });
+
+                // Create a new Blob from the response data
+                const fileBlob = new Blob([response.data], { type: 'application/octet-stream' });
+
+                // Create an object URL for the Blob
+                const fileURL = window.URL.createObjectURL(fileBlob);
+
+                // Create an anchor element to trigger the download
+                const downloadLink = document.createElement('a');
+                downloadLink.href = fileURL;
+                downloadLink.download = response.data.fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+
+                document.body.removeChild(downloadLink);
+            } 
+            catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        },
+        async deleteFile() {
+            try {
+                const response = await axios.post(`https://localhost:7169/api/storage/delete-file`, {
+                    Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
+                    StorageContainerItemId: this.id,
+                });
+
+                if(response.data.success == true) {
+                    this.isVisible = false;
+                }        
+            } 
+            catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        }
+    },
     computed: {
         formattedCreatedAt() {
             const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
             return new Intl.DateTimeFormat('de-DE', options).format(new Date(this.createdAt));
         }
     },
+    data() {
+        return {
+            isVisible: true,
+        }
+    }
 }
 </script>
 
@@ -74,11 +124,11 @@ export default {
 }
 
 .file-name {
-    width: 70%;
+    width: 65%;
 }
 
 .file-size {
-    width: 10%;
+    width: 15%;
 }
 
 .file-created-at {
