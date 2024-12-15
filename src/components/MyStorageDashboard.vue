@@ -6,7 +6,7 @@
     </div>
 
     <div id="container-items">
-        <MyStorageContainer v-for="storageContainer in storageContainers" :key="storageContainer.name" :id="storageContainer.id" :name="storageContainer.name" :createdAt = "storageContainer.createdAt" @show-container-dashboard="showContainerDashboard" />
+        <MyStorageContainer v-for="storageContainer in storageContainers" :key="storageContainer.id" :id="storageContainer.id" :name="storageContainer.name" :createdAt = "storageContainer.createdAt" @show-container-dashboard="showContainerDashboard" />
     </div>
 </div>
 </template>
@@ -34,7 +34,7 @@ export default {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
                 }
-            })
+            });
 
             var storageContainers = response.data.containers;
 
